@@ -179,9 +179,9 @@
   }
 
   function updateActionButtonsState() {
-    const disabled = state.isOffline || state.isSubmitting;
+    const disabled = Boolean(state.isOffline || state.isSubmitting);
     
-    // Save/Submit buttons
+    // Save/Submit buttons: keep enabled unless actively submitting or offline
     if (el.incomeSubmitBtn) el.incomeSubmitBtn.disabled = disabled;
     if (el.expenseSubmitBtn) el.expenseSubmitBtn.disabled = disabled;
 
@@ -214,7 +214,7 @@
       if (spinner) spinner.classList.remove('hidden');
     } else {
       button.removeAttribute('aria-busy');
-      button.disabled = state.isOffline;
+      button.disabled = Boolean(state.isOffline);
       if (spinner) spinner.classList.add('hidden');
     }
   }
@@ -297,6 +297,9 @@
     if (!el.summaryDate.value) el.summaryDate.value = today;
     if (!el.summaryMonth.value) el.summaryMonth.value = getLocalMonthISO();
     if (!el.summaryYear.value) el.summaryYear.value = new Date().getFullYear();
+
+    // Recompute breakdown helper and validity after login
+    updateBreakdownCalculation();
 
     loadAllData();
   }
@@ -687,6 +690,20 @@
 
   el.incomeCancelBtn.addEventListener('click', cancelEditIncome);
 
+  // Clear inline errors as user types
+  if (el.incomeDate) {
+    el.incomeDate.addEventListener('input', () => {
+      el.incomeDateError.classList.add('hidden');
+      el.incomeFormError.classList.add('hidden');
+    });
+  }
+  if (el.incomeAmount) {
+    el.incomeAmount.addEventListener('input', () => {
+      el.incomeAmountError.classList.add('hidden');
+      el.incomeFormError.classList.add('hidden');
+    });
+  }
+
   el.incomeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (state.isOffline) {
@@ -703,20 +720,22 @@
     const noteVal = el.incomeNote.value.trim();
     const editId = el.incomeEditId.value;
 
-    let hasError = false;
+    let firstInvalid = null;
     if (!dateVal) {
       el.incomeDateError.textContent = 'Please select a valid date.';
       el.incomeDateError.classList.remove('hidden');
-      el.incomeDate.focus();
-      hasError = true;
+      firstInvalid = el.incomeDate;
     }
     if (isNaN(amountVal) || amountVal <= 0) {
       el.incomeAmountError.textContent = 'Amount must be a positive number.';
       el.incomeAmountError.classList.remove('hidden');
-      if (!hasError) el.incomeAmount.focus();
-      hasError = true;
+      if (!firstInvalid) firstInvalid = el.incomeAmount;
     }
-    if (hasError) return;
+
+    if (firstInvalid) {
+      firstInvalid.focus();
+      return;
+    }
 
     state.isSubmitting = true;
     setButtonBusy(el.incomeSubmitBtn, true);
@@ -749,7 +768,10 @@
           })
           .eq('id', editId);
 
-        if (updateErr) throw updateErr;
+        if (updateErr) {
+          showToast(updateErr.message || 'Error updating income.', 'error');
+          throw updateErr;
+        }
 
         // Entry history
         const historyRow = {
@@ -791,7 +813,10 @@
           .from('income')
           .insert([newEntry]);
 
-        if (insertErr) throw insertErr;
+        if (insertErr) {
+          showToast(insertErr.message || 'Error saving income.', 'error');
+          throw insertErr;
+        }
 
         showToast('Income saved.');
         cancelEditIncome();
@@ -804,10 +829,11 @@
       }
       el.incomeFormError.textContent = err.message || 'Failed to save income.';
       el.incomeFormError.classList.remove('hidden');
-      showToast('Error saving income: ' + err.message, 'error');
+      showToast(err.message || 'Error saving income.', 'error');
     } finally {
       state.isSubmitting = false;
       setButtonBusy(el.incomeSubmitBtn, false);
+      updateActionButtonsState();
     }
   });
 
@@ -826,6 +852,7 @@
     labelInput.value = label;
     labelInput.maxLength = 100;
     labelInput.setAttribute('aria-label', 'Breakdown line label');
+    labelInput.addEventListener('input', updateBreakdownCalculation);
 
     const amountInput = document.createElement('input');
     amountInput.type = 'number';
@@ -879,19 +906,20 @@
     rows.forEach(r => {
       const amtInput = r.querySelector('.breakdown-amount');
       const val = parseFloat(amtInput ? amtInput.value : 0) || 0;
-      sum += val;
+      sum += round2(val);
     });
 
     const sumRounded = round2(sum);
 
-    el.breakdownHelper.textContent = `Breakdown ${formatAmount(sumRounded)} of ${formatAmount(totalRounded)}`;
-
     if (sumRounded > totalRounded) {
+      const diff = round2(sumRounded - totalRounded);
+      el.breakdownHelper.textContent = `Breakdown ${formatAmount(sumRounded)} of ${formatAmount(totalRounded)} (exceeds total by ${formatAmount(diff)})`;
       el.breakdownHelper.classList.add('exceeded');
       el.breakdownError.textContent = 'Breakdown sum cannot exceed total expense amount.';
       el.breakdownError.classList.remove('hidden');
       return false;
     } else {
+      el.breakdownHelper.textContent = `Breakdown ${formatAmount(sumRounded)} of ${formatAmount(totalRounded)}`;
       el.breakdownHelper.classList.remove('exceeded');
       el.breakdownError.textContent = '';
       el.breakdownError.classList.add('hidden');
@@ -899,7 +927,22 @@
     }
   }
 
-  el.expenseTotal.addEventListener('input', updateBreakdownCalculation);
+  // Clear errors dynamically and update breakdown on total / date input
+  if (el.expenseDate) {
+    el.expenseDate.addEventListener('input', () => {
+      el.expenseDateError.classList.add('hidden');
+      el.expenseFormError.classList.add('hidden');
+    });
+  }
+
+  if (el.expenseTotal) {
+    el.expenseTotal.addEventListener('input', () => {
+      el.expenseTotalError.classList.add('hidden');
+      el.expenseFormError.classList.add('hidden');
+      updateBreakdownCalculation();
+    });
+    el.expenseTotal.addEventListener('change', updateBreakdownCalculation);
+  }
 
   // --- Add / Edit Expense Handling ---
   function startEditExpense(entry) {
@@ -958,35 +1001,39 @@
     const totalVal = parseFloat(el.expenseTotal.value);
     const editId = el.expenseEditId.value;
 
-    let hasError = false;
+    let firstInvalid = null;
     if (!dateVal) {
       el.expenseDateError.textContent = 'Please select a valid date.';
       el.expenseDateError.classList.remove('hidden');
-      el.expenseDate.focus();
-      hasError = true;
+      firstInvalid = el.expenseDate;
     }
     if (isNaN(totalVal) || totalVal <= 0) {
       el.expenseTotalError.textContent = 'Total amount must be a positive number.';
       el.expenseTotalError.classList.remove('hidden');
-      if (!hasError) el.expenseTotal.focus();
-      hasError = true;
+      if (!firstInvalid) firstInvalid = el.expenseTotal;
     }
 
     // Strict Breakdown Rule validation
-    const totalRounded = round2(totalVal);
+    const totalRounded = round2(totalVal || 0);
     let breakdownSum = 0;
     const formLines = [];
+    let firstInvalidLineInput = null;
 
     const rows = el.breakdownItemsList.querySelectorAll('.breakdown-row');
     rows.forEach(r => {
       const labelInput = r.querySelector('.breakdown-label');
       const amtInput = r.querySelector('.breakdown-amount');
       const label = labelInput ? labelInput.value.trim() : '';
-      const amt = parseFloat(amtInput ? amtInput.value : 0) || 0;
+      const amtRaw = amtInput ? amtInput.value.trim() : '';
+      const amt = parseFloat(amtRaw) || 0;
       const itemId = r.dataset.itemId || null;
 
+      if (label && (isNaN(amt) || amt <= 0)) {
+        if (!firstInvalidLineInput) firstInvalidLineInput = amtInput;
+      }
+
       if (amt > 0 || label) {
-        breakdownSum += amt;
+        breakdownSum += round2(amt);
         formLines.push({
           id: itemId,
           label: label || 'Item',
@@ -997,12 +1044,24 @@
 
     const sumRounded = round2(breakdownSum);
     if (sumRounded > totalRounded) {
-      el.breakdownError.textContent = 'Breakdown sum cannot exceed total expense amount.';
+      const diff = round2(sumRounded - totalRounded);
+      el.breakdownError.textContent = `Breakdown sum (${formatAmount(sumRounded)}) cannot exceed total expense amount (${formatAmount(totalRounded)}).`;
       el.breakdownError.classList.remove('hidden');
-      hasError = true;
+      el.breakdownHelper.classList.add('exceeded');
+      if (!firstInvalid) {
+        const firstAmt = el.breakdownItemsList.querySelector('.breakdown-amount');
+        firstInvalid = firstAmt || el.expenseTotal;
+      }
+    } else if (firstInvalidLineInput && !firstInvalid) {
+      el.breakdownError.textContent = 'Please enter a positive amount for breakdown lines.';
+      el.breakdownError.classList.remove('hidden');
+      firstInvalid = firstInvalidLineInput;
     }
 
-    if (hasError) return;
+    if (firstInvalid) {
+      firstInvalid.focus();
+      return;
+    }
 
     state.isSubmitting = true;
     setButtonBusy(el.expenseSubmitBtn, true);
@@ -1226,10 +1285,11 @@
       }
       el.expenseFormError.textContent = err.message || 'Failed to save expense.';
       el.expenseFormError.classList.remove('hidden');
-      showToast('Error saving expense: ' + err.message, 'error');
+      showToast(err.message || 'Error saving expense.', 'error');
     } finally {
       state.isSubmitting = false;
       setButtonBusy(el.expenseSubmitBtn, false);
+      updateActionButtonsState();
     }
   });
 
@@ -1478,6 +1538,7 @@
   // --- Initial Setup on DOM Ready ---
   document.addEventListener('DOMContentLoaded', () => {
     updateOnlineStatus();
+    updateBreakdownCalculation();
     initAuth();
   });
 
