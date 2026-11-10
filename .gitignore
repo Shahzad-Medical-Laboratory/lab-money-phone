@@ -1,0 +1,13 @@
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Environment / secrets safeguard (never commit secrets to this repo)
+.env
+.env*.local
+
+# Node temporary files
+node_modules/
+npm-debug.log*
+
