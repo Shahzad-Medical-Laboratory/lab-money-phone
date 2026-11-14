@@ -1,9 +1,9 @@
 // Supabase Configuration
 // Only the public (publishable) key goes here. Never put secret keys or passwords in this file.
-const SUPABASE_URL = "https://setrfjnxszfvpetqfyrj.supabase.co";
-const SUPABASE_KEY = "sb_publishable_FQk_vgiGPPskE6LUrNA3xw_rop89wkF";
+var SUPABASE_URL = "https://shtuskajyplhqtjmlnhd.supabase.co";
+var SUPABASE_KEY = "sb_publishable_eA8FE05aVl7j7gkOb11H_w_QbgPGZvS";
 
 window.SUPABASE_CONFIG = {
-  SUPABASE_URL,
-  SUPABASE_KEY
+  SUPABASE_URL: SUPABASE_URL,
+  SUPABASE_KEY: SUPABASE_KEY
 };

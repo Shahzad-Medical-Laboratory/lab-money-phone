@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://setrfjnxszfvpetqfyrj.supabase.co; style-src 'self'; script-src 'self'; img-src 'self' data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://shtuskajyplhqtjmlnhd.supabase.co; style-src 'self'; script-src 'self'; img-src 'self' data:;">
   <title>Lab Money Tracker</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -36,27 +36,211 @@
           </svg>
         </div>
         <h1 class="auth-title">Lab Money Tracker</h1>
-        <p class="auth-sub">Sign in with your lab account</p>
+        <p id="auth-sub" class="auth-sub">Sign in with your email account</p>
       </div>
 
-      <form id="login-form" novalidate>
+      <!-- View 1: Login -->
+      <div id="view-login" class="auth-view">
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" name="email" autocomplete="username" required placeholder="lab@example.com">
+            <div id="login-email-error" class="field-error hidden" role="alert"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" name="password" autocomplete="current-password" required placeholder="••••••••">
+            <div id="login-password-error" class="field-error hidden" role="alert"></div>
+          </div>
+
+          <div id="login-error" class="form-error hidden" role="alert"></div>
+
+          <!-- Unconfirmed email banner & resend -->
+          <div id="login-unconfirmed-box" class="notice-box hidden" role="alert">
+            <p id="login-unconfirmed-msg" class="notice-text">Your email address has not been confirmed yet.</p>
+            <button type="button" id="resend-confirmation-btn" class="btn btn-secondary btn-block btn-sm">
+              <span class="btn-spinner hidden" aria-hidden="true"></span>
+              <span class="btn-text">Resend confirmation email</span>
+            </button>
+          </div>
+
+          <button type="submit" id="login-btn" class="btn btn-primary btn-block">
+            <span class="btn-spinner hidden" aria-hidden="true"></span>
+            <span class="btn-text">Sign In</span>
+          </button>
+
+          <div class="auth-nav-links">
+            <button type="button" id="goto-forgot-btn" class="btn-link">Forgot password?</button>
+            <button type="button" id="goto-signup-btn" class="btn-link">Don't have an account? Sign up</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- View 2: Sign Up -->
+      <div id="view-signup" class="auth-view hidden">
+        <form id="signup-form" novalidate>
+          <div class="form-group">
+            <label for="signup-email">Email</label>
+            <input type="email" id="signup-email" name="email" autocomplete="username" required placeholder="lab@example.com">
+            <div id="signup-email-error" class="field-error hidden" role="alert"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="signup-password">Password (minimum 10 characters)</label>
+            <input type="password" id="signup-password" name="password" autocomplete="new-password" minlength="10" required placeholder="••••••••••">
+            <div id="signup-password-error" class="field-error hidden" role="alert"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="signup-confirm-password">Confirm Password</label>
+            <input type="password" id="signup-confirm-password" name="confirm-password" autocomplete="new-password" minlength="10" required placeholder="••••••••••">
+            <div id="signup-confirm-error" class="field-error hidden" role="alert"></div>
+          </div>
+
+          <div class="form-group form-check-group">
+            <label class="checkbox-label" for="signup-terms">
+              <input type="checkbox" id="signup-terms" name="terms" required>
+              <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a></span>
+            </label>
+            <div id="signup-terms-error" class="field-error hidden" role="alert"></div>
+          </div>
+
+          <div id="signup-error" class="form-error hidden" role="alert"></div>
+
+          <button type="submit" id="signup-btn" class="btn btn-primary btn-block">
+            <span class="btn-spinner hidden" aria-hidden="true"></span>
+            <span class="btn-text">Create Account</span>
+          </button>
+
+          <div class="auth-nav-links">
+            <button type="button" id="goto-login-from-signup" class="btn-link">Already have an account? Sign in</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- View 3: Sign Up Confirmation Screen -->
+      <div id="view-confirm-sent" class="auth-view hidden">
+        <div class="notice-card">
+          <div class="notice-icon">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+          </div>
+          <h2 class="notice-card-title">Check your email</h2>
+          <p class="notice-card-text">Check your email to confirm your account.</p>
+          <button type="button" id="back-to-login-from-sent" class="btn btn-secondary btn-block">Back to Sign In</button>
+        </div>
+      </div>
+
+      <!-- View 4: Forgot Password -->
+      <div id="view-forgot" class="auth-view hidden">
+        <form id="forgot-form" novalidate>
+          <p class="auth-instruction">Enter your email address and we'll send a link to reset your password.</p>
+
+          <div class="form-group">
+            <label for="forgot-email">Email</label>
+            <input type="email" id="forgot-email" name="email" autocomplete="email" required placeholder="lab@example.com">
+            <div id="forgot-email-error" class="field-error hidden" role="alert"></div>
+          </div>
+
+          <div id="forgot-error" class="form-error hidden" role="alert"></div>
+          <div id="forgot-success" class="notice-box notice-success hidden" role="status"></div>
+
+          <button type="submit" id="forgot-btn" class="btn btn-primary btn-block">
+            <span class="btn-spinner hidden" aria-hidden="true"></span>
+            <span class="btn-text">Send Reset Link</span>
+          </button>
+
+          <div class="auth-nav-links">
+            <button type="button" id="goto-login-from-forgot" class="btn-link">Back to Sign In</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- View 5: Password Recovery Form (Set a new password) -->
+      <div id="view-recovery" class="auth-view hidden">
+        <form id="recovery-form" novalidate>
+          <h2 class="auth-view-title">Set a new password</h2>
+
+          <div class="form-group">
+            <label for="recovery-password">New Password (minimum 10 characters)</label>
+            <input type="password" id="recovery-password" name="password" autocomplete="new-password" minlength="10" required placeholder="••••••••••">
+            <div id="recovery-password-error" class="field-error hidden" role="alert"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="recovery-confirm-password">Confirm Password</label>
+            <input type="password" id="recovery-confirm-password" name="confirm-password" autocomplete="new-password" minlength="10" required placeholder="••••••••••">
+            <div id="recovery-confirm-error" class="field-error hidden" role="alert"></div>
+          </div>
+
+          <div id="recovery-error" class="form-error hidden" role="alert"></div>
+
+          <button type="submit" id="recovery-btn" class="btn btn-primary btn-block">
+            <span class="btn-spinner hidden" aria-hidden="true"></span>
+            <span class="btn-text">Set New Password</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Auth Footer -->
+      <footer class="auth-footer">
+        <a href="terms.html">Terms</a>
+        <span aria-hidden="true">•</span>
+        <a href="privacy.html">Privacy Policy</a>
+      </footer>
+    </div>
+  </main>
+
+  <!-- First-Time Setup screen -->
+  <main id="setup-screen" class="auth-screen hidden">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="brand-badge">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2v20"></path>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+        </div>
+        <h1 class="auth-title">Welcome</h1>
+        <p class="auth-sub">Set up your business profile to continue</p>
+      </div>
+
+      <form id="setup-form" novalidate>
         <div class="form-group">
-          <label for="login-email">Email</label>
-          <input type="email" id="login-email" name="email" autocomplete="username" required placeholder="lab@example.com">
-          <div id="login-email-error" class="field-error hidden" role="alert"></div>
+          <label for="setup-business-name">Business Name</label>
+          <input type="text" id="setup-business-name" maxlength="100" required placeholder="e.g. My Lab">
+          <div id="setup-name-error" class="field-error hidden" role="alert"></div>
         </div>
 
         <div class="form-group">
-          <label for="login-password">Password</label>
-          <input type="password" id="login-password" name="password" autocomplete="current-password" required placeholder="••••••••">
-          <div id="login-password-error" class="field-error hidden" role="alert"></div>
+          <label for="setup-currency">Currency</label>
+          <select id="setup-currency" required>
+            <option value="PKR">PKR - Pakistani Rupee</option>
+            <option value="USD">USD - US Dollar</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="GBP">GBP - British Pound</option>
+            <option value="AED">AED - UAE Dirham</option>
+            <option value="SAR">SAR - Saudi Riyal</option>
+            <option value="INR">INR - Indian Rupee</option>
+            <option value="BDT">BDT - Bangladeshi Taka</option>
+            <option value="OTHER">Other...</option>
+          </select>
         </div>
 
-        <div id="login-error" class="form-error hidden" role="alert"></div>
+        <div id="setup-custom-currency-group" class="form-group hidden">
+          <label for="setup-currency-custom">Custom Currency Code (2–8 uppercase letters)</label>
+          <input type="text" id="setup-currency-custom" maxlength="8" placeholder="e.g. CAD" class="uppercase-input">
+          <div id="setup-currency-error" class="field-error hidden" role="alert"></div>
+        </div>
 
-        <button type="submit" id="login-btn" class="btn btn-primary btn-block">
+        <div id="setup-form-error" class="form-error hidden" role="alert"></div>
+
+        <button type="submit" id="setup-submit-btn" class="btn btn-primary btn-block">
           <span class="btn-spinner hidden" aria-hidden="true"></span>
-          <span class="btn-text">Sign In</span>
+          <span class="btn-text">Save and Open App</span>
         </button>
       </form>
     </div>
@@ -74,20 +258,95 @@
           <path d="M8.5 2h7"></path>
           <path d="M14 9.3a6.5 6.5 0 1 1-4 0"></path>
         </svg>
-        <span class="brand-text">Money Tracker</span>
+        <span id="header-brand-name" class="brand-text">Money Tracker</span>
       </div>
+
       <div class="header-actions">
-        <span id="user-display" class="user-display"></span>
-        <button type="button" id="logout-btn" class="btn-logout" aria-label="Sign out">
+        <button type="button" id="account-toggle-btn" class="btn-account" aria-label="Open account menu" aria-expanded="false" aria-controls="account-panel">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-            <polyline points="16 17 21 12 16 7"></polyline>
-            <line x1="21" y1="12" x2="9" y2="12"></line>
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <span>Logout</span>
+          <span id="account-btn-label" class="account-btn-label">Account</span>
         </button>
       </div>
     </header>
+
+    <!-- Account panel modal / menu -->
+    <div id="account-backdrop" class="account-backdrop hidden"></div>
+    <aside id="account-panel" class="account-panel hidden" role="dialog" aria-modal="true" aria-labelledby="account-panel-title">
+      <div class="account-panel-header">
+        <h2 id="account-panel-title" class="account-panel-title">Account Settings</h2>
+        <button type="button" id="account-close-btn" class="btn-icon" aria-label="Close account menu">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="account-panel-body">
+        <div class="account-info-box">
+          <div class="account-info-row">
+            <span class="account-info-label">Email:</span>
+            <span id="account-email-display" class="account-info-value"></span>
+          </div>
+          <div class="account-info-row">
+            <span class="account-info-label">Business:</span>
+            <span id="account-business-display" class="account-info-value"></span>
+          </div>
+        </div>
+
+        <form id="account-form" novalidate>
+          <h3 class="account-section-heading">Edit Business &amp; Currency</h3>
+
+          <div class="form-group">
+            <label for="account-business-name">Business Name</label>
+            <input type="text" id="account-business-name" maxlength="100" required>
+            <div id="account-name-error" class="field-error hidden" role="alert"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="account-currency">Currency</label>
+            <select id="account-currency" required>
+              <option value="PKR">PKR - Pakistani Rupee</option>
+              <option value="USD">USD - US Dollar</option>
+              <option value="EUR">EUR - Euro</option>
+              <option value="GBP">GBP - British Pound</option>
+              <option value="AED">AED - UAE Dirham</option>
+              <option value="SAR">SAR - Saudi Riyal</option>
+              <option value="INR">INR - Indian Rupee</option>
+              <option value="BDT">BDT - Bangladeshi Taka</option>
+              <option value="OTHER">Other...</option>
+            </select>
+          </div>
+
+          <div id="account-custom-currency-group" class="form-group hidden">
+            <label for="account-currency-custom">Custom Currency Code (2–8 uppercase letters)</label>
+            <input type="text" id="account-currency-custom" maxlength="8" placeholder="e.g. CAD" class="uppercase-input">
+            <div id="account-currency-error" class="field-error hidden" role="alert"></div>
+          </div>
+
+          <div id="account-form-error" class="form-error hidden" role="alert"></div>
+
+          <button type="submit" id="account-save-btn" class="btn btn-primary btn-block">
+            <span class="btn-spinner hidden" aria-hidden="true"></span>
+            <span class="btn-text">Save Changes</span>
+          </button>
+        </form>
+
+        <div class="account-panel-actions">
+          <button type="button" id="logout-btn" class="btn btn-danger btn-block">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </aside>
 
     <!-- Content screens -->
     <main id="main-content" class="main-content">
@@ -247,6 +506,15 @@
           </div>
         </div>
       </section>
+
+      <!-- App Footer Links -->
+      <footer class="app-footer">
+        <div class="footer-links">
+          <a href="terms.html">Terms of Service</a>
+          <span aria-hidden="true">•</span>
+          <a href="privacy.html">Privacy Policy</a>
+        </div>
+      </footer>
     </main>
 
     <!-- Fixed Bottom Navigation -->
@@ -302,4 +570,3 @@
   <script src="app.js"></script>
 </body>
 </html>
-

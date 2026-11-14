@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:;">
+  <title>Privacy Policy - Lab Money Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="legal-page">
+  <header class="legal-header">
+    <div class="legal-header-inner">
+      <div class="header-brand">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 18h12"></path>
+          <path d="M10 2v7.31"></path>
+          <path d="M14 9.3V2"></path>
+          <path d="M8.5 2h7"></path>
+          <path d="M14 9.3a6.5 6.5 0 1 1-4 0"></path>
+        </svg>
+        <span class="brand-text">Money Tracker</span>
+      </div>
+      <a href="index.html" class="btn btn-secondary btn-sm legal-back-btn">← Back to App</a>
+    </div>
+  </header>
+
+  <main class="legal-container">
+    <div class="draft-notice" role="alert">
+      DRAFT: to be replaced with the final text before launch.
+    </div>
+
+    <article class="card legal-card">
+      <h1 class="legal-title">Privacy Policy</h1>
+      <p class="legal-meta">Last updated: November 2026</p>
+
+      <section class="legal-section">
+        <h2>1. Overview</h2>
+        <p>Lab Money Tracker respects your privacy and is committed to protecting your personal data. This policy outlines what data we collect, how it is used, and how it is secured.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>2. Data We Collect</h2>
+        <p>We collect only the information necessary to provide the service:</p>
+        <ul>
+          <li><strong>Account Data:</strong> Your email address and authenticated user identifier.</li>
+          <li><strong>Profile Data:</strong> Your business name and preferred display currency.</li>
+          <li><strong>Financial Records:</strong> Income entries, expense entries, breakdown items, notes, and transaction dates you input.</li>
+          <li><strong>Technical Metadata:</strong> Non-personal device identifiers used solely to prevent edit conflicts.</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>3. How We Use Your Data</h2>
+        <p>Your data is used strictly for calculating summaries, rendering entries, and managing your money tracking records. We do not sell, rent, monetize, or share your data with advertisers or third parties.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>4. Data Isolation &amp; Row Level Security</h2>
+        <p>Every row in the database is automatically tagged with your user ID and guarded by database-level Row Level Security policies. No user can access or view another user's financial records.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>5. Deletion &amp; Data Retention</h2>
+        <p>Deleted entries are retained as soft deletes for audit and conflict resolution purposes. When you sign out, all user data is cleared from the device memory and screen so subsequent users cannot view previous records.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>6. Security</h2>
+        <p>All communication with Supabase uses encrypted HTTPS connections. Authentication tokens are managed securely in local browser storage, and secret service keys are never stored in client code.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>7. Contact Information</h2>
+        <p>If you have any questions regarding your personal information, please contact your laboratory administrator or data privacy coordinator.</p>
+      </section>
+    </article>
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-links">
+      <a href="index.html">App Home</a>
+      <span aria-hidden="true">•</span>
+      <a href="terms.html">Terms of Service</a>
+    </div>
+  </footer>
+</body>
+</html>
